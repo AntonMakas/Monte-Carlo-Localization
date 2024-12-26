@@ -107,17 +107,23 @@ def main(num_landmarks, motion, sensor):
 
         keys = pygame.key.get_pressed()
         dx, dy = 0, 0
-        if keys[pygame.K_w]:
+        if keys[pygame.K_w] or keys[pygame.K_UP]:
             dy = -robot_speed
-        if keys[pygame.K_s]:
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
             dy = robot_speed
-        if keys[pygame.K_a]:
+        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
             dx = -robot_speed
-        if keys[pygame.K_d]:
+        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             dx = robot_speed
+
 
         # Move robot and particles
         robot_pos += np.array([dx, dy])
+
+        # Ensure robot stays within bounds
+        robot_pos[0] = np.clip(robot_pos[0], 0, WIDTH)
+        robot_pos[1] = np.clip(robot_pos[1], 0, HEIGHT)
+
         particles = motion_model(particles, dx, dy)
 
         # Measure distances to landmarks
