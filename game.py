@@ -62,7 +62,7 @@ def draw_lidar_sensors(robot_position, landmarks, num_beams=15, beam_length=200)
         else:
             pygame.draw.line(screen, BLACK, robot_position.astype(int), (int(end_x), int(end_y)), 1)
 
-        # Optionally highlight detected landmarks
+        # Highlighting closes landmarks
         if closest_point is not None:
             pygame.draw.circle(screen, BLUE, closest_point, 7)  # Highlight used landmark
 
@@ -104,16 +104,6 @@ def resample_particles(particles, weights):
     return particles[indices]
 
 def calculate_mean_error(robot_pos, particles):
-    """
-    Calculate the mean error of the system.
-
-    Parameters:
-    - robot_pos: np.array([x, y]), the true position of the robot.
-    - particles: np.array([[x1, y1], [x2, y2], ...]), the positions of the particles.
-
-    Returns:
-    - float: The mean error between the robot's position and the particle positions.
-    """
     total_error = 0.0
     num_particles = len(particles)
 
@@ -131,10 +121,10 @@ def main(num_landmarks, motion, sensor):
     motion_noise = motion
     sensor_noise = sensor
 
-    # Initialize landmarks
+    # Initialising landmarks
     landmarks = [(np.random.randint(50, WIDTH - 50), np.random.randint(50, HEIGHT - 50)) for _ in range(num_landmarks)]
 
-    # Initialize particles and weights using optimized approach
+    # Initialising particles and weights
     particles = np.random.uniform(low=[0, 0], high=[WIDTH, HEIGHT], size=(num_particles, 2))
     weights = np.full(num_particles, 1 / num_particles)
 
@@ -162,40 +152,41 @@ def main(num_landmarks, motion, sensor):
         # Move robot and particles
         robot_pos += np.array([dx, dy])
 
-        # Ensure robot stays within bounds
+        # Ensuring robot stays within bounds
         robot_pos[0] = np.clip(robot_pos[0], 0, WIDTH)
         robot_pos[1] = np.clip(robot_pos[1], 0, HEIGHT)
 
+        # Step 1: Applying the motion model to move particles based on robot motion
         particles = motion_model(particles, dx, dy)
 
-        # Measure distances to landmarks
+        # Step 2: Measuring distances from the robot to landmarks
         robot_distances = measure_distances(robot_pos, landmarks)
 
-        # Update weights based on measurements
+        # Step 3: Updating particle weights based on measurement model
         weights = measurement_model(particles, landmarks, robot_distances)
 
-        # Resample particles
+        # Step 4: Resampling particles based on their weights
         particles = resample_particles(particles, weights)
 
-        # Calculate mean error
+        # Calculating mean error
         mean_error = calculate_mean_error(robot_pos, particles)
 
-        # Draw elements
+        # Drawing elements
         draw_landmarks()
         draw_particles(particles)
         draw_robot(robot_pos)
         draw_lidar_sensors(robot_pos, landmarks)
 
-        # Display mean error
+        # Displaying mean error
         font = pygame.font.Font(None, 36)
         error_text = font.render(f"Mean Error: {mean_error:.2f}", True, BLACK)
         screen.blit(error_text, (10, 50))
 
-        # Update display
+        # Updating display
         pygame.display.flip()
         clock.tick(30)
 
     pygame.quit()
 
 if __name__ == "__main__":
-    main()
+    main(7,2.67,180)
